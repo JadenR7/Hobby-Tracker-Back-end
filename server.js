@@ -2,6 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const { Redis } = require('@upstash/redis');
 
+// For generating user IDs
+const { v4: uuidv4 } = require('uuid')
+
+// to use environment variables
+require('dotenv').config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -24,11 +30,12 @@ app.listen(port, () => {
 app.post('/api/hobby', async (req, res) => {
     try {
         // Create new hobby
-        const hobbyId = generateHobby()
+        const hobbyId = uuidv4()
 
         // Create new hobby object
         const newHobby = {
-            Hobby: hobbyId,
+            id: hobbyId,
+            name: req.body.name,
         }
 
         const hobbyKey = `hobby${hobbyId}`
