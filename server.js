@@ -20,3 +20,34 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+app.post('/api/hobby', async (req, res) => {
+    try {
+        // Create new hobby
+        const hobbyId = generateHobby()
+
+        // Create new hobby object
+        const newHobby = {
+            Hobby: hobbyId,
+        }
+
+        const hobbyKey = `hobby${hobbyId}`
+        await redis.set(hobbyKey, JSON.stringify(newHobby))
+
+        console.log(`Hobby created with ID: ${hobbyId}`)
+        
+        res.status(201).json({
+            success: true,
+            data: newHobby,
+            message: 'Hobby created successfully',
+            timestamp: new Date().toISOString()
+        })
+    } catch (error) {
+        console.error('Error creating new hobby: ', error)
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to create new hobby',
+            timestamp: new Date().toISOString()
+        })
+    }
+})
