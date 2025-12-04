@@ -27,33 +27,67 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
-app.post('/api/hobby', async (req, res) => {
+// Get all activities
+app.get('/api/activities', async (req, res) => {
     try {
-        // Create new hobby
-        const hobbyId = uuidv4()
+        // Fetch all keys matching activity:*
+        const keys = await redis.keys('activity:*')
+        const activities = []
 
-        // Create new hobby object
-        const newHobby = {
-            id: hobbyId,
-            name: req.body.name,
+        for (const key of keys) {
+            const activityData = await redis.get(key)
+            if (activityData) {
+                activities.push(activityData)
+            }
         }
 
-        const hobbyKey = `hobby${hobbyId}`
-        await redis.set(hobbyKey, JSON.stringify(newHobby))
-
-        console.log(`Hobby created with ID: ${hobbyId}`)
-        
-        res.status(201).json({
+        res.status(200).json({
             success: true,
-            data: newHobby,
-            message: 'Hobby created successfully',
+            data: activities,
+            message: 'Activities retrieved successfully',
             timestamp: new Date().toISOString()
         })
     } catch (error) {
-        console.error('Error creating new hobby: ', error)
+        console.error('Error fetching activities: ', error)
         res.status(500).json({
             error: 'Internal server error',
-            message: 'Failed to create new hobby',
+            message: 'Failed to retrieve activities',
+            timestamp: new Date().toISOString()
+        })
+    }
+})
+
+app.post('/api/activities', async (req, res) => {
+    try {
+        // Create new hobby
+        const activityId = uuidv4()
+
+        // Create new activity object
+        const newActivity = {
+            id: activityId,
+            name: req.body.name,
+            timeSpent: req.body.timeSpent,
+            // If there are no notes, set it to empty string
+            notes: req.body.notes || '',
+            date: new Date().toISOString(),
+        }
+
+        const activityKey = `activity:${activityId}`
+        await redis.set(activityKey, JSON.stringify(newActivity))
+
+        console.log(`Activity created with ID: ${activityId}`)
+        
+        res.status(201).json({
+            success: true,
+            data: newActivity,
+            message: 'Activity created successfully',
+            timestamp: new Date().toISOString()
+        })
+    } catch (error) {
+        console.error('Error creating new activity: ', error)
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to create new activity',
             timestamp: new Date().toISOString()
         })
     }
