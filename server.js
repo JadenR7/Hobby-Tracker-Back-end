@@ -92,3 +92,16 @@ app.post('/api/activities', async (req, res) => {
         })
     }
 })
+
+app.delete('/api/activities/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const key = `activity:${id}`;
+    await redis.del(key);
+
+    res.status(200).json({ success: true, message: 'Activity deleted.' });
+  } catch (error) {
+    console.error('Error deleting activity:', error);
+    res.status(500).json({ error: 'Failed to delete activity' });
+  }
+});
